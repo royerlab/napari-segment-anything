@@ -1,36 +1,33 @@
+from typing import Callable
+
+import napari
 import numpy as np
+from skimage.data import astronaut
 
-from napari_segment_anything import ExampleQWidget, example_magic_widget
+from napari_segment_anything import SAMWidget
 
 
-# make_napari_viewer is a pytest fixture that returns a napari viewer object
-# capsys is a pytest fixture that captures stdout and stderr output streams
-def test_example_q_widget(make_napari_viewer, capsys):
-    # make viewer and add an image layer using our fixture
+def test_click(make_napari_viewer: Callable[[], napari.Viewer]) -> None:
     viewer = make_napari_viewer()
-    viewer.add_image(np.random.random((100, 100)))
+    # viewer = napari.Viewer()
+    image = astronaut()
 
-    # create our widget, passing in the viewer
-    my_widget = ExampleQWidget(viewer)
+    widget = SAMWidget(viewer)
 
-    # call our widget method
-    my_widget._on_click()
+    viewer.window.add_dock_widget(widget)
+    viewer.add_image(image)
 
-    # read captured output and check that it's as we expected
-    captured = capsys.readouterr()
-    assert captured.out == "napari has 1 layers\n"
+    widget._weights_file.value = "weights/sam_vit_h_4b8939.pth"
 
+    assert widget._predictor is not None
+    assert widget._im_layer_widget.value is not None
 
-def test_example_magic_widget(make_napari_viewer, capsys):
-    viewer = make_napari_viewer()
-    layer = viewer.add_image(np.random.random((100, 100)))
+    widget._pts_layer.data = [[42, 233]]  # point on hair
 
-    # this time, our widget will be a MagicFactory or FunctionGui instance
-    my_widget = example_magic_widget()
+    assert np.any(widget._mask_layer.data > 0)
 
-    # if we "call" this object, it'll execute our function
-    my_widget(viewer.layers[0])
+    widget._pts_layer.data = [[42, 233], [125, 225]]  # adding point to face
 
-    # read captured output and check that it's as we expected
-    captured = capsys.readouterr()
-    assert captured.out == f"you have selected {layer}\n"
+    assert np.any(widget._mask_layer.data > 0)
+
+    # napari.run()

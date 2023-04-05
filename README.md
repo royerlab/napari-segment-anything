@@ -7,7 +7,9 @@
 [![codecov](https://codecov.io/gh/jookuma/napari-segment-anything/branch/main/graph/badge.svg)](https://codecov.io/gh/jookuma/napari-segment-anything)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-segment-anything)](https://napari-hub.org/plugins/napari-segment-anything)
 
-Napari plugin of Segment Anything Model (SAM)
+Napari plugin of [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything)
+
+Download the network weights [here](https://github.com/facebookresearch/segment-anything#model-checkpoints)
 
 ----------------------------------
 
@@ -26,7 +28,6 @@ https://napari.org/stable/plugins/index.html
 You can install `napari-segment-anything` via [pip]:
 
     pip install napari-segment-anything
-
 
 
 To install latest development version :
