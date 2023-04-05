@@ -4,7 +4,8 @@ import napari
 import numpy as np
 import torch
 from magicgui.widgets import ComboBox, Container, create_widget
-from napari.layers import Image
+from napari.layers import Image, Points
+from qtpy.QtCore import Qt
 from segment_anything import SamPredictor, sam_model_registry
 from segment_anything.modeling import Sam
 from skimage import color, util
@@ -41,7 +42,11 @@ class SAMWidget(Container):
         )
 
         self._pts_layer = self._viewer.add_points(name="SAM points")
+        self._pts_layer.current_face_color = "blue"
         self._pts_layer.events.data.connect(self._on_run)
+        self._pts_layer.mouse_drag_callbacks.append(
+            self._mouse_button_modifier
+        )
         # self._boxes_layer = self._viewer.add_shapes(name="SAM boxes")
 
         self._logits: Optional[torch.TensorType] = None
@@ -76,13 +81,22 @@ class SAMWidget(Container):
         self._mask_layer.data = np.zeros(image.shape[:2], dtype=int)
         self._predictor.set_image(image)
 
+    def _mouse_button_modifier(self, _: Points, event) -> None:
+        self._pts_layer.selected_data = []
+        if event.button == Qt.LeftButton:
+            self._pts_layer.current_face_color = "blue"
+        else:
+            self._pts_layer.current_face_color = "red"
+
     def _on_run(self, _: Optional[Any] = None) -> None:
         points = self._pts_layer.data
         if len(points) == 0 or self._im_layer_widget.value is None:
             return
 
         colors = self._pts_layer.face_color
-        labels = np.all(colors == colors[0], axis=1)
+        blue = [0, 0, 1, 1]
+        labels = np.all(colors == blue, axis=1)
+
         mask, _, self._logits = self._predictor.predict(
             point_coords=np.flip(points, axis=-1),
             point_labels=labels,

@@ -27,7 +27,6 @@ https://napari.org/stable/plugins/index.html
 
 You can install `napari-segment-anything` via [pip]:
 
-
 ```bash
 pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install napari-segment-anything
@@ -44,7 +43,7 @@ pip install git+https://github.com/jookuma/napari-segment-anything.git
 
 - The first step is to load your weights into the file using the file dialog.
 - The prediction is computed automatically when the annotations layers are updated.
-- For points supervision, points with color distinct from the color of the first point are considered background labels.
+- For points supervision, left clicks are positive cues (object) and right clicks are negative (background).
 
 ## Contributing
 
