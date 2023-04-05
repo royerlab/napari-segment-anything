@@ -2,23 +2,25 @@ from typing import Callable
 
 import napari
 import numpy as np
+import pytest
 from skimage.data import astronaut
 
 from napari_segment_anything import SAMWidget
 
 
-def test_click(make_napari_viewer: Callable[[], napari.Viewer]) -> None:
+@pytest.mark.parametrize("im_dtype", [np.uint8, np.float32])
+def test_click(
+    make_napari_viewer: Callable[[], napari.Viewer],
+    im_dtype: np.dtype,
+) -> None:
     viewer = make_napari_viewer()
     # viewer = napari.Viewer()
-    image = astronaut()
+    image = astronaut().astype(im_dtype)
 
-    widget = SAMWidget(viewer)
+    widget = SAMWidget(viewer, model_type="vit_b")
 
     viewer.window.add_dock_widget(widget)
     viewer.add_image(image)
-
-    widget.model_type = "vit_b"
-    widget._weights_file.value = "weights/sam_vit_b_01ec64.pth"
 
     assert widget._predictor is not None
     assert widget._im_layer_widget.value is not None

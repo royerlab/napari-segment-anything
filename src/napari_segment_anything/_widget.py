@@ -1,14 +1,15 @@
-from pathlib import Path
 from typing import Any, Optional
 
 import napari
 import numpy as np
 import torch
-from magicgui.widgets import Container, FileEdit, create_widget
+from magicgui.widgets import ComboBox, Container, create_widget
 from napari.layers import Image
 from segment_anything import SamPredictor, sam_model_registry
 from segment_anything.modeling import Sam
 from skimage import color, util
+
+from napari_segment_anything.utils import get_weights_path
 
 # from segment_anything.utils.transforms import ResizeLongestSide
 
@@ -17,16 +18,19 @@ class SAMWidget(Container):
     _sam: Sam
     _predictor: SamPredictor
 
-    def __init__(self, viewer: napari.Viewer):
+    def __init__(self, viewer: napari.Viewer, model_type: str = "default"):
         super().__init__()
         self._viewer = viewer
 
-        self._model_type = "default"
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self._weights_file = FileEdit(filter="*.pth", label="Model weights")
-        self._weights_file.changed.connect(self._load_checkpoint)
-        self.append(self._weights_file)
+        self._model_type_widget = ComboBox(
+            value=model_type,
+            choices=list(sam_model_registry.keys()),
+            label="Model:",
+        )
+        self._model_type_widget.changed.connect(self._load_model)
+        self.append(self._model_type_widget)
 
         self._im_layer_widget = create_widget(annotation=Image, label="Image:")
         self._im_layer_widget.changed.connect(self._load_image)
@@ -42,21 +46,12 @@ class SAMWidget(Container):
 
         self._logits: Optional[torch.TensorType] = None
 
-    @property
-    def model_type(self) -> str:
-        return self._model_type
+        self._model_type_widget.changed.emit(model_type)
 
-    @model_type.setter
-    def model_type(self, value: str) -> None:
-        if value not in sam_model_registry:
-            raise ValueError(
-                f"Model type {value} not found. Expected {list(sam_model_registry.keys())}"
-            )
-        # NOTE: weights and model are not updated until checkpoint is loaded
-        self._model_type = value
-
-    def _load_checkpoint(self, ckpt_path: Path) -> None:
-        self._sam = sam_model_registry[self._model_type](ckpt_path)
+    def _load_model(self, model_type: str) -> None:
+        self._sam = sam_model_registry[model_type](
+            get_weights_path(model_type)
+        )
         self._sam.to(self._device)
         self._predictor = SamPredictor(self._sam)
         self._load_image(self._im_layer_widget.value)
@@ -71,6 +66,10 @@ class SAMWidget(Container):
 
         elif image.ndim == 3 and image.shape[-1] == 4:
             image = color.rgba2rgb(image)
+
+        if np.issubdtype(image.dtype, np.floating):
+            image = image - image.min()
+            image = image / image.max()
 
         image = util.img_as_ubyte(image)
 
