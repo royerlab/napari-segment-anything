@@ -27,12 +27,19 @@ https://napari.org/stable/plugins/index.html
 
 You can install `napari-segment-anything` via [pip]:
 
-    pip install napari-segment-anything
+
+```bash
+pip install git+https://github.com/facebookresearch/segment-anything.git
+pip install napari-segment-anything
+```
 
 
-To install latest development version :
+To install the latest development version :
 
-    pip install git+https://github.com/jookuma/napari-segment-anything.git
+```bash
+pip install git+https://github.com/facebookresearch/segment-anything.git
+pip install git+https://github.com/jookuma/napari-segment-anything.git
+```
 
 
 ## Contributing
