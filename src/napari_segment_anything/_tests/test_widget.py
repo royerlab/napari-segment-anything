@@ -17,7 +17,8 @@ def test_click(make_napari_viewer: Callable[[], napari.Viewer]) -> None:
     viewer.window.add_dock_widget(widget)
     viewer.add_image(image)
 
-    widget._weights_file.value = "weights/sam_vit_h_4b8939.pth"
+    widget.model_type = "vit_b"
+    widget._weights_file.value = "weights/sam_vit_b_01ec64.pth"
 
     assert widget._predictor is not None
     assert widget._im_layer_widget.value is not None

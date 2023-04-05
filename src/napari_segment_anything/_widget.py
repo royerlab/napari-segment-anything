@@ -42,6 +42,19 @@ class SAMWidget(Container):
 
         self._logits: Optional[torch.TensorType] = None
 
+    @property
+    def model_type(self) -> str:
+        return self._model_type
+
+    @model_type.setter
+    def model_type(self, value: str) -> None:
+        if value not in sam_model_registry:
+            raise ValueError(
+                f"Model type {value} not found. Expected {list(sam_model_registry.keys())}"
+            )
+        # NOTE: weights and model are not updated until checkpoint is loaded
+        self._model_type = value
+
     def _load_checkpoint(self, ckpt_path: Path) -> None:
         self._sam = sam_model_registry[self._model_type](ckpt_path)
         self._sam.to(self._device)
