@@ -39,6 +39,12 @@ class SAMWidget(Container):
         self._im_layer_widget.changed.connect(self._load_image)
         self.append(self._im_layer_widget)
 
+        self._confirm_mask_btn = PushButton(
+            text="Confirm Annot.", enabled=False
+        )
+        self._confirm_mask_btn.changed.connect(self._on_confirm_mask)
+        self.append(self._confirm_mask_btn)
+
         self._auto_segm_btn = PushButton(text="Auto. Segm.")
         self._auto_segm_btn.changed.connect(self._on_auto_run)
         self.append(self._auto_segm_btn)
@@ -61,7 +67,7 @@ class SAMWidget(Container):
             self._mouse_button_modifier
         )
         self._boxes_layer = self._viewer.add_shapes(
-            name="SAM boxes",
+            name="SAM box",
             face_color="transparent",
             edge_color="green",
             edge_width=2,
@@ -147,7 +153,8 @@ class SAMWidget(Container):
             mask_input=self._logits,
             multimask_output=False,
         )
-        self._mask_layer.data = mask
+        self._mask_layer.data = mask[0]
+        self._confirm_mask_btn.enabled = True
 
     def _on_shape_drag(self, _: Shapes, event) -> Generator:
         if self._boxes_layer.mode != Mode.ADD_RECTANGLE:
@@ -172,3 +179,18 @@ class SAMWidget(Container):
             labels[pred_dict["segmentation"]] = i + 1
 
         self._labels_layer.data = labels
+
+    def _on_confirm_mask(self) -> None:
+        if self._image is None:
+            return
+
+        labels = self._labels_layer.data
+        mask = self._mask_layer.data
+        labels[np.nonzero(mask)] = labels.max() + 1
+        self._labels_layer.data = labels
+
+        self._confirm_mask_btn.enabled = False
+        # boxes must be reseted first because of how of points data update signal
+        self._boxes_layer.data = []
+        self._pts_layer.data = []
+        self._mask_layer.data = np.zeros_like(mask)

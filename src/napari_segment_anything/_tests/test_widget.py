@@ -32,15 +32,26 @@ def test_click(
     assert widget._predictor is not None
     assert widget._im_layer_widget.value is not None
 
+    # first interaction
     widget._pts_layer.data = [[42, 233]]  # point on hair
 
     assert np.any(widget._mask_layer.data > 0)
+    assert np.all(widget._labels_layer.data == 0)
 
+    # confirm mask
+    widget._confirm_mask_btn.clicked()
+    assert np.all(widget._mask_layer.data == 0)
+    assert np.any(widget._labels_layer.data > 0)
+
+    # new interaction
     widget._pts_layer.data = [[42, 233], [125, 225]]  # adding point to face
 
     assert np.any(widget._mask_layer.data > 0)
 
-    # napari.run()
+    # confirm mask
+    widget._confirm_mask_btn.clicked()
+    assert np.all(widget._mask_layer.data == 0)
+    assert len(np.unique(widget._labels_layer.data)) == 3
 
 
 @pytest.mark.parametrize("image", [astronaut(), camera()])
