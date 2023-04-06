@@ -1,5 +1,7 @@
 import urllib.request
+import warnings
 from pathlib import Path
+from typing import Optional
 
 SAM_WEIGHTS_URL = {
     "default": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
@@ -33,9 +35,15 @@ def get_weights_path(model_type: str) -> Optional[Path]:
     if not weight_path.exists():
         print(f"Downloading {weight_url} to {weight_path} ...")
         try:
-            urllib.request.urlretrieve(weight_url, weight_path, reporthook=_report_hook)
-        except (urllib.error.HTTPError, urllib.error.URLError, urllib.error.ContentTooShortError) as e:
-            print(f"Error downloading {weight_url}: {e}")
+            urllib.request.urlretrieve(
+                weight_url, weight_path, reporthook=_report_hook
+            )
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            urllib.error.ContentTooShortError,
+        ) as e:
+            warnings.warn(f"Error downloading {weight_url}: {e}")
             return None
         else:
             print("\rDownload complete.                            ")
