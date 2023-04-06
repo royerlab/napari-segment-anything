@@ -1,5 +1,7 @@
 import urllib.request
+import warnings
 from pathlib import Path
+from typing import Optional
 
 SAM_WEIGHTS_URL = {
     "default": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
@@ -20,7 +22,7 @@ def _report_hook(block_num: int, block_size: int, total_size: int) -> None:
     )
 
 
-def get_weights_path(model_type: str) -> Path:
+def get_weights_path(model_type: str) -> Optional[Path]:
     """Returns the path to the weight of a given model architecture."""
     weight_url = SAM_WEIGHTS_URL[model_type]
 
@@ -32,9 +34,18 @@ def get_weights_path(model_type: str) -> Path:
     # Download the weights if they don't exist
     if not weight_path.exists():
         print(f"Downloading {weight_url} to {weight_path} ...")
-        urllib.request.urlretrieve(
-            weight_url, str(weight_path), reporthook=_report_hook
-        )
-        print("\rDownload complete.                           ")
+        try:
+            urllib.request.urlretrieve(
+                weight_url, weight_path, reporthook=_report_hook
+            )
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            urllib.error.ContentTooShortError,
+        ) as e:
+            warnings.warn(f"Error downloading {weight_url}: {e}")
+            return None
+        else:
+            print("\rDownload complete.                            ")
 
     return weight_path
