@@ -32,9 +32,12 @@ def get_weights_path(model_type: str) -> Path:
     # Download the weights if they don't exist
     if not weight_path.exists():
         print(f"Downloading {weight_url} to {weight_path} ...")
-        urllib.request.urlretrieve(
-            weight_url, str(weight_path), reporthook=_report_hook
-        )
-        print("\rDownload complete.                           ")
+        try:
+            urllib.request.urlretrieve(weight_url, weight_path, reporthook=_report_hook)
+        except (urllib.error.HTTPError, urllib.error.URLError, urllib.error.ContentTooShortError) as e:
+            print(f"Error downloading {weight_url}: {e}")
+            return None
+        else:
+            print("\rDownload complete.")
 
     return weight_path
