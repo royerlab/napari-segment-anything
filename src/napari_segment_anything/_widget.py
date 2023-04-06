@@ -47,7 +47,12 @@ class SAMWidget(Container):
         self._pts_layer.mouse_drag_callbacks.append(
             self._mouse_button_modifier
         )
-        # self._boxes_layer = self._viewer.add_shapes(name="SAM boxes")
+        self._boxes_layer = self._viewer.add_shapes(
+            name="SAM boxes",
+            face_color="transparent",
+            edge_color="green",
+        )
+        self._boxes_layer.events.data.connect(self._on_run)
 
         self._logits: Optional[torch.TensorType] = None
 
@@ -89,17 +94,39 @@ class SAMWidget(Container):
             self._pts_layer.current_face_color = "red"
 
     def _on_run(self, _: Optional[Any] = None) -> None:
-        points = self._pts_layer.data
-        if len(points) == 0 or self._im_layer_widget.value is None:
+        # TODO: FIXME
+        if (
+            self._boxes_layer._is_moving
+            or self._boxes_layer._is_creating
+            or self._im_layer_widget.value is None
+        ):
             return
 
-        colors = self._pts_layer.face_color
-        blue = [0, 0, 1, 1]
-        labels = np.all(colors == blue, axis=1)
+        points = self._pts_layer.data
+        boxes = self._boxes_layer.data
+
+        if len(points) == 0 and len(boxes) == 0:
+            return
+
+        if len(boxes) > 0:
+            box = boxes[0]
+            box = np.stack([box.min(axis=0), box.max(axis=0)], axis=0)[:, :2]
+            box = np.flip(box, -1).reshape(-1)[None, ...]
+        else:
+            box = None
+
+        if len(points) > 0:
+            colors = self._pts_layer.face_color
+            blue = [0, 0, 1, 1]
+            labels = np.all(colors == blue, axis=1)
+        else:
+            points = None
+            labels = None
 
         mask, _, self._logits = self._predictor.predict(
             point_coords=np.flip(points, axis=-1),
             point_labels=labels,
+            box=box,
             mask_input=self._logits,
             multimask_output=False,
         )
