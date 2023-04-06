@@ -11,6 +11,10 @@ Napari plugin of [Segment Anything Model (SAM)](https://github.com/facebookresea
 
 Download the network weights [here](https://github.com/facebookresearch/segment-anything#model-checkpoints)
 
+
+https://user-images.githubusercontent.com/21022743/230456433-2fa7bc40-a735-4d73-8d87-ecf776bbe2be.mp4
+
+
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
