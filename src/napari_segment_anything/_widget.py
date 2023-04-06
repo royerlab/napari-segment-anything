@@ -3,11 +3,12 @@ from typing import Any, Generator, Optional
 import napari
 import numpy as np
 import torch
-from magicgui.widgets import ComboBox, Container, create_widget
+from magicgui.widgets import ComboBox, Container, PushButton, create_widget
 from napari.layers import Image, Points, Shapes
 from napari.layers.shapes._shapes_constants import Mode
 from qtpy.QtCore import Qt
 from segment_anything import SamPredictor, sam_model_registry
+from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
 from segment_anything.modeling import Sam
 from skimage import color, util
 
@@ -38,14 +39,24 @@ class SAMWidget(Container):
         self._im_layer_widget.changed.connect(self._load_image)
         self.append(self._im_layer_widget)
 
+        self._auto_segm_btn = PushButton(text="Auto. Segm.")
+        self._auto_segm_btn.changed.connect(self._on_auto_run)
+        self.append(self._auto_segm_btn)
+
+        self._labels_layer = self._viewer.add_labels(
+            data=np.zeros((256, 256), dtype=int),
+            name="SAM labels",
+        )
+
         self._mask_layer = self._viewer.add_labels(
             data=np.zeros((256, 256), dtype=int),
             name="SAM mask",
         )
+        self._mask_layer.contour = 2
 
         self._pts_layer = self._viewer.add_points(name="SAM points")
         self._pts_layer.current_face_color = "blue"
-        self._pts_layer.events.data.connect(self._on_run)
+        self._pts_layer.events.data.connect(self._on_interactive_run)
         self._pts_layer.mouse_drag_callbacks.append(
             self._mouse_button_modifier
         )
@@ -57,6 +68,7 @@ class SAMWidget(Container):
         )
         self._boxes_layer.mouse_drag_callbacks.append(self._on_shape_drag)
 
+        self._image: Optional[np.ndarray] = None
         self._logits: Optional[torch.TensorType] = None
 
         self._model_type_widget.changed.emit(model_type)
@@ -84,10 +96,11 @@ class SAMWidget(Container):
             image = image - image.min()
             image = image / image.max()
 
-        image = util.img_as_ubyte(image)
+        self._image = util.img_as_ubyte(image)
 
-        self._mask_layer.data = np.zeros(image.shape[:2], dtype=int)
-        self._predictor.set_image(image)
+        self._mask_layer.data = np.zeros(self._image.shape[:2], dtype=int)
+        self._labels_layer.data = np.zeros(self._image.shape[:2], dtype=int)
+        self._predictor.set_image(self._image)
 
     def _mouse_button_modifier(self, _: Points, event) -> None:
         self._pts_layer.selected_data = []
@@ -96,7 +109,7 @@ class SAMWidget(Container):
         else:
             self._pts_layer.current_face_color = "red"
 
-    def _on_run(self, _: Optional[Any] = None) -> None:
+    def _on_interactive_run(self, _: Optional[Any] = None) -> None:
         points = self._pts_layer.data
         boxes = self._boxes_layer.data
 
@@ -139,4 +152,17 @@ class SAMWidget(Container):
         while event.type == "mouse_move":
             yield
         # on mouse release
-        self._on_run()
+        self._on_interactive_run()
+
+    def _on_auto_run(self) -> None:
+        if self._image is None:
+            return
+        mask_gen = SamAutomaticMaskGenerator(self._sam)
+        preds = mask_gen.generate(self._image)
+
+        labels = self._labels_layer.data
+
+        for i, pred_dict in enumerate(preds):
+            labels[pred_dict["segmentation"]] = i + 1
+
+        self._labels_layer.data = labels

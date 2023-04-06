@@ -3,24 +3,31 @@ from typing import Callable
 import napari
 import numpy as np
 import pytest
+from numpy.typing import ArrayLike
 from skimage.data import astronaut
 
 from napari_segment_anything import SAMWidget
 
 
+@pytest.fixture
+def sample_image() -> ArrayLike:
+    return astronaut()
+
+
 @pytest.mark.parametrize("im_dtype", [np.uint8, np.float32])
 def test_click(
     make_napari_viewer: Callable[[], napari.Viewer],
+    sample_image: ArrayLike,
     im_dtype: np.dtype,
 ) -> None:
     viewer = make_napari_viewer()
     # viewer = napari.Viewer()
-    image = astronaut().astype(im_dtype)
+    sample_image = sample_image.astype(im_dtype)
 
     widget = SAMWidget(viewer, model_type="vit_b")
 
     viewer.window.add_dock_widget(widget)
-    viewer.add_image(image)
+    viewer.add_image(sample_image)
 
     assert widget._predictor is not None
     assert widget._im_layer_widget.value is not None
@@ -34,3 +41,17 @@ def test_click(
     assert np.any(widget._mask_layer.data > 0)
 
     # napari.run()
+
+
+def test_automatic_segmentation(
+    make_napari_viewer: Callable[[], napari.Viewer],
+    sample_image: ArrayLike,
+) -> None:
+    viewer = make_napari_viewer()
+    widget = SAMWidget(viewer, model_type="vit_b")
+
+    viewer.window.add_dock_widget(widget)
+    viewer.add_image(sample_image)
+
+    widget._auto_segm_btn.clicked()
+    assert np.any(widget._labels_layer.data > 0)
