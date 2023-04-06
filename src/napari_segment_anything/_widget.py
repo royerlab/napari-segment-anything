@@ -1,10 +1,11 @@
-from typing import Any, Optional
+from typing import Any, Generator, Optional
 
 import napari
 import numpy as np
 import torch
 from magicgui.widgets import ComboBox, Container, create_widget
-from napari.layers import Image, Points
+from napari.layers import Image, Points, Shapes
+from napari.layers.shapes._shapes_constants import Mode
 from qtpy.QtCore import Qt
 from segment_anything import SamPredictor, sam_model_registry
 from segment_anything.modeling import Sam
@@ -38,7 +39,8 @@ class SAMWidget(Container):
         self.append(self._im_layer_widget)
 
         self._mask_layer = self._viewer.add_labels(
-            data=np.zeros((256, 256), dtype=int)
+            data=np.zeros((256, 256), dtype=int),
+            name="SAM mask",
         )
 
         self._pts_layer = self._viewer.add_points(name="SAM points")
@@ -51,8 +53,9 @@ class SAMWidget(Container):
             name="SAM boxes",
             face_color="transparent",
             edge_color="green",
+            edge_width=2,
         )
-        self._boxes_layer.events.data.connect(self._on_run)
+        self._boxes_layer.mouse_drag_callbacks.append(self._on_shape_drag)
 
         self._logits: Optional[torch.TensorType] = None
 
@@ -94,28 +97,23 @@ class SAMWidget(Container):
             self._pts_layer.current_face_color = "red"
 
     def _on_run(self, _: Optional[Any] = None) -> None:
-        # TODO: FIXME
-        if (
-            self._boxes_layer._is_moving
-            or self._boxes_layer._is_creating
-            or self._im_layer_widget.value is None
-        ):
-            return
-
         points = self._pts_layer.data
         boxes = self._boxes_layer.data
 
-        if len(points) == 0 and len(boxes) == 0:
+        if self._im_layer_widget.value is None or (
+            len(points) == 0 and len(boxes) == 0
+        ):
             return
 
         if len(boxes) > 0:
-            box = boxes[0]
-            box = np.stack([box.min(axis=0), box.max(axis=0)], axis=0)[:, :2]
+            box = boxes[-1]
+            box = np.stack([box.min(axis=0), box.max(axis=0)], axis=0)
             box = np.flip(box, -1).reshape(-1)[None, ...]
         else:
             box = None
 
         if len(points) > 0:
+            points = np.flip(points, axis=-1)
             colors = self._pts_layer.face_color
             blue = [0, 0, 1, 1]
             labels = np.all(colors == blue, axis=1)
@@ -124,10 +122,21 @@ class SAMWidget(Container):
             labels = None
 
         mask, _, self._logits = self._predictor.predict(
-            point_coords=np.flip(points, axis=-1),
+            point_coords=points,
             point_labels=labels,
             box=box,
             mask_input=self._logits,
             multimask_output=False,
         )
         self._mask_layer.data = mask
+
+    def _on_shape_drag(self, _: Shapes, event) -> Generator:
+        if self._boxes_layer.mode != Mode.ADD_RECTANGLE:
+            return
+        # on mouse click
+        yield
+        # on move
+        while event.type == "mouse_move":
+            yield
+        # on mouse release
+        self._on_run()
