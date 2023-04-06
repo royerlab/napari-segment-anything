@@ -57,6 +57,7 @@ class SAMWidget(Container):
         self._mask_layer = self._viewer.add_labels(
             data=np.zeros((256, 256), dtype=int),
             name="SAM mask",
+            color={1: "cyan"},
         )
         self._mask_layer.contour = 2
 
@@ -78,6 +79,7 @@ class SAMWidget(Container):
         self._logits: Optional[torch.TensorType] = None
 
         self._model_type_widget.changed.emit(model_type)
+        self._viewer.bind_key("C", self._on_confirm_mask)
 
     def _load_model(self, model_type: str) -> None:
         self._sam = sam_model_registry[model_type](
@@ -180,7 +182,7 @@ class SAMWidget(Container):
 
         self._labels_layer.data = labels
 
-    def _on_confirm_mask(self) -> None:
+    def _on_confirm_mask(self, _: Optional[Any] = None) -> None:
         if self._image is None:
             return
 
