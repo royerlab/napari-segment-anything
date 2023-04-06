@@ -11,39 +11,36 @@ Napari plugin of [Segment Anything Model (SAM)](https://github.com/facebookresea
 
 Download the network weights [here](https://github.com/facebookresearch/segment-anything#model-checkpoints)
 
+
+https://user-images.githubusercontent.com/21022743/230456433-2fa7bc40-a735-4d73-8d87-ecf776bbe2be.mp4
+
+
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
-
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
-
-and review the napari docs for plugin developers:
-https://napari.org/stable/plugins/index.html
--->
 
 ## Installation
 
 You can install `napari-segment-anything` via [pip]:
 
 ```bash
-pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install napari-segment-anything
 ```
 
-To install the latest development version :
+We recommend installing the latest development version because this package is being developed:
 
 ```bash
-pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install git+https://github.com/jookuma/napari-segment-anything.git
 ```
 
+IMPORTANT: `napari` won't work if you don't have `pyqt5` or `pyside2` installed.
+
 ## Instructions
 
-- The first step is to load your weights into the file using the file dialog.
-- The prediction is computed automatically when the annotations layers are updated.
+- Interactions are done on the "SAM points" and "SAM box" layers using the existing functionalities of napari. Only rectangle shapes trigger the network prediction.
 - For points supervision, left clicks are positive cues (object) and right clicks are negative (background).
+- Press the "Confirm Annot." button (or the "C" key) to propagate the current segmentation mask to the label image.
+- Use the napari labels layer features to delete or edit already confirmed labels.
 
 ## Contributing
 
@@ -53,7 +50,7 @@ the coverage at least stays the same before you submit a pull request.
 ## License
 
 Distributed under the terms of the [Apache Software License 2.0] license,
-"napari-segment-anything" is free and open source software
+"napari-segment-anything" is a free and open source software
 
 ## Issues
 
