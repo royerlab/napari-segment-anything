@@ -85,11 +85,17 @@ class SAMWidget(Container):
         if im_layer is None or not hasattr(self, "_sam"):
             return
 
+        if im_layer.ndim != 2:
+            raise ValueError(
+                f"Only 2D images supported. Got {im_layer.ndim}-dim image."
+            )
+
         image = im_layer.data
-        if image.ndim == 2:
+        if not im_layer.rgb:
             image = color.gray2rgb(image)
 
-        elif image.ndim == 3 and image.shape[-1] == 4:
+        elif image.shape[-1] == 4:
+            # images with alpha
             image = color.rgba2rgb(image)
 
         if np.issubdtype(image.dtype, np.floating):

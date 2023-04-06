@@ -4,7 +4,7 @@ import napari
 import numpy as np
 import pytest
 from numpy.typing import ArrayLike
-from skimage.data import astronaut
+from skimage.data import astronaut, camera
 
 from napari_segment_anything import SAMWidget
 
@@ -43,15 +43,16 @@ def test_click(
     # napari.run()
 
 
+@pytest.mark.parametrize("image", [astronaut(), camera()])
 def test_automatic_segmentation(
     make_napari_viewer: Callable[[], napari.Viewer],
-    sample_image: ArrayLike,
+    image: ArrayLike,
 ) -> None:
     viewer = make_napari_viewer()
     widget = SAMWidget(viewer, model_type="vit_b")
 
     viewer.window.add_dock_widget(widget)
-    viewer.add_image(sample_image)
+    viewer.add_image(image)
 
     widget._auto_segm_btn.clicked()
     assert np.any(widget._labels_layer.data > 0)
