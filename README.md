@@ -24,16 +24,16 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
 You can install `napari-segment-anything` via [pip]:
 
 ```bash
-pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install napari-segment-anything
 ```
 
-To install the latest development version :
+We recommend installing the latest development version because this package is being developed:
 
 ```bash
-pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install git+https://github.com/jookuma/napari-segment-anything.git
 ```
+
+IMPORTANT: `napari` won't work if you don't have `pyqt5` or `pyside2` installed.
 
 ## Instructions
 

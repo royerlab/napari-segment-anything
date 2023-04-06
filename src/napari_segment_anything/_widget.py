@@ -40,7 +40,9 @@ class SAMWidget(Container):
         self.append(self._im_layer_widget)
 
         self._confirm_mask_btn = PushButton(
-            text="Confirm Annot.", enabled=False
+            text="Confirm Annot.",
+            enabled=False,
+            tooltip="Press C to confirm annotation.",
         )
         self._confirm_mask_btn.changed.connect(self._on_confirm_mask)
         self.append(self._confirm_mask_btn)
