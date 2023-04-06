@@ -20,7 +20,7 @@ def _report_hook(block_num: int, block_size: int, total_size: int) -> None:
     )
 
 
-def get_weights_path(model_type: str) -> Path:
+def get_weights_path(model_type: str) -> Optional[Path]:
     """Returns the path to the weight of a given model architecture."""
     weight_url = SAM_WEIGHTS_URL[model_type]
 
@@ -38,6 +38,6 @@ def get_weights_path(model_type: str) -> Path:
             print(f"Error downloading {weight_url}: {e}")
             return None
         else:
-            print("\rDownload complete.")
+            print("\rDownload complete.                            ")
 
     return weight_path
