@@ -31,27 +31,42 @@ def test_click(
 
     assert widget._predictor is not None
     assert widget._im_layer_widget.value is not None
+    assert not widget._confirm_mask_btn.enabled
+    assert not widget._cancel_annot_btn.enabled
 
     # first interaction
     widget._pts_layer.data = [[42, 233]]  # point on hair
 
     assert np.any(widget._mask_layer.data > 0)
     assert np.all(widget._labels_layer.data == 0)
+    assert widget._confirm_mask_btn.enabled
+    assert widget._cancel_annot_btn.enabled
 
     # confirm mask
     widget._confirm_mask_btn.clicked()
     assert np.all(widget._mask_layer.data == 0)
     assert np.any(widget._labels_layer.data > 0)
+    assert not widget._confirm_mask_btn.enabled
+    assert not widget._cancel_annot_btn.enabled
 
     # new interaction
     widget._pts_layer.data = [[42, 233], [125, 225]]  # adding point to face
-
     assert np.any(widget._mask_layer.data > 0)
 
     # confirm mask
     widget._confirm_mask_btn.clicked()
     assert np.all(widget._mask_layer.data == 0)
     assert len(np.unique(widget._labels_layer.data)) == 3
+
+    # test cancel interaction
+    widget._pts_layer.data = [[42, 233]]
+    assert np.any(widget._mask_layer.data > 0)
+
+    widget._cancel_annot_btn.clicked()
+    assert np.any(widget._mask_layer.data == 0)
+    assert len(np.unique(widget._labels_layer.data)) == 3  # still the same
+    assert not widget._confirm_mask_btn.enabled
+    assert not widget._cancel_annot_btn.enabled
 
 
 @pytest.mark.parametrize("image", [astronaut(), camera()])
