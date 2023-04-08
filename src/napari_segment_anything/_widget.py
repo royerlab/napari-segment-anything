@@ -47,6 +47,14 @@ class SAMWidget(Container):
         self._confirm_mask_btn.changed.connect(self._on_confirm_mask)
         self.append(self._confirm_mask_btn)
 
+        self._cancel_annot_btn = PushButton(
+            text="Cancel Annot.",
+            enabled=False,
+            tooltip="Press X to cancel annotation.",
+        )
+        self._cancel_annot_btn.changed.connect(self._cancel_annot)
+        self.append(self._cancel_annot_btn)
+
         self._auto_segm_btn = PushButton(text="Auto. Segm.")
         self._auto_segm_btn.changed.connect(self._on_auto_run)
         self.append(self._auto_segm_btn)
@@ -82,6 +90,7 @@ class SAMWidget(Container):
 
         self._model_type_widget.changed.emit(model_type)
         self._viewer.bind_key("C", self._on_confirm_mask)
+        self._viewer.bind_key("X", self._cancel_annot)
 
     def _load_model(self, model_type: str) -> None:
         self._sam = sam_model_registry[model_type](
@@ -159,6 +168,7 @@ class SAMWidget(Container):
         )
         self._mask_layer.data = mask[0]
         self._confirm_mask_btn.enabled = True
+        self._cancel_annot_btn.enabled = True
 
     def _on_shape_drag(self, _: Shapes, event) -> Generator:
         if self._boxes_layer.mode != Mode.ADD_RECTANGLE:
@@ -192,9 +202,13 @@ class SAMWidget(Container):
         mask = self._mask_layer.data
         labels[np.nonzero(mask)] = labels.max() + 1
         self._labels_layer.data = labels
+        self._cancel_annot()
 
-        self._confirm_mask_btn.enabled = False
-        # boxes must be reseted first because of how of points data update signal
+    def _cancel_annot(self, _: Optional[Any] = None) -> None:
+        # boxes must be reset first because of how of points data update signal
         self._boxes_layer.data = []
         self._pts_layer.data = []
-        self._mask_layer.data = np.zeros_like(mask)
+        self._mask_layer.data = np.zeros_like(self._mask_layer.data)
+
+        self._confirm_mask_btn.enabled = False
+        self._cancel_annot_btn.enabled = False
