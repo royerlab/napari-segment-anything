@@ -33,9 +33,29 @@ We recommend installing the latest development version because this package is b
 pip install git+https://github.com/jookuma/napari-segment-anything.git
 ```
 
-IMPORTANT: `napari` won't work if you don't have `pyqt5` or `pyside2` installed.
+**IMPORTANT**: `napari` won't work if you don't have `pyqt5` or `pyside2` installed.
 
 ## Instructions
+
+### Opening napari-segment-anything
+
+This software is napari plugin, so once you have napari installed you can open it using the command line:
+
+```bash
+napari <your image path> -w napari-segment-anything 'Segment Anything'
+```
+
+I noticed that sometimes napari fails to load the plugin widget from the command line, go to step 2 from below to load it.
+
+If you prefer the user interface you need to:
+
+1) Drag and drop your image into napari to load it;
+2) Go to the "Plugins" file menu in the upper right corner and select the "Segment Anything" plugin.
+3) Follow the instructions below for usage.
+
+**IMPORTANT**: If you get an error make sure you have `pyqt5` or `pyside2` installed.
+
+### Usage
 
 - Interactions are done on the "SAM points" and "SAM box" layers using the existing functionalities of napari. Only rectangle shapes trigger the network prediction.
 - For points supervision, left clicks are positive cues (object) and right clicks are negative (background).
