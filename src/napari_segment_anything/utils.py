@@ -3,6 +3,9 @@ import warnings
 from pathlib import Path
 from typing import Optional
 
+import toolz as tz
+from napari.utils import progress
+
 SAM_WEIGHTS_URL = {
     "default": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
     "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
@@ -10,12 +13,18 @@ SAM_WEIGHTS_URL = {
     "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
 }
 
-
-def _report_hook(block_num: int, block_size: int, total_size: int) -> None:
+@tz.curry
+def _report_hook(
+    block_num: int,
+    block_size: int,
+    total_size: int,
+    pbr: "progress" = None,
+) -> None:
     downloaded = block_num * block_size
     percent = downloaded * 100 / total_size
     downloaded_mb = downloaded / 1024 / 1024
     total_size_mb = total_size / 1024 / 1024
+    pbr.update(percent)
     print(
         f"Download progress: {percent:.1f}% ({downloaded_mb:.1f}/{total_size_mb:.1f} MB)",
         end="\r",
@@ -34,18 +43,19 @@ def get_weights_path(model_type: str) -> Optional[Path]:
     # Download the weights if they don't exist
     if not weight_path.exists():
         print(f"Downloading {weight_url} to {weight_path} ...")
-        try:
-            urllib.request.urlretrieve(
-                weight_url, weight_path, reporthook=_report_hook
-            )
-        except (
-            urllib.error.HTTPError,
-            urllib.error.URLError,
-            urllib.error.ContentTooShortError,
-        ) as e:
-            warnings.warn(f"Error downloading {weight_url}: {e}")
-            return None
-        else:
-            print("\rDownload complete.                            ")
+        with progress(total=100) as pbr:
+            try:
+                urllib.request.urlretrieve(
+                    weight_url, weight_path, reporthook=_report_hook(pbr=pbr)
+                )
+            except (
+                urllib.error.HTTPError,
+                urllib.error.URLError,
+                urllib.error.ContentTooShortError,
+            ) as e:
+                warnings.warn(f"Error downloading {weight_url}: {e}")
+                return None
+            else:
+                print("\rDownload complete.                            ")
 
     return weight_path
