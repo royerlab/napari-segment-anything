@@ -25,8 +25,7 @@ def _report_hook(
     percent = downloaded * 100 / total_size
     downloaded_mb = downloaded / 1024 / 1024
     total_size_mb = total_size / 1024 / 1024
-    pbr.update(int(percent))
-    pbr.refresh()
+    pbr.update(int(percent) - pbr.n)
     print(
         f"Download progress: {percent:.1f}% ({downloaded_mb:.1f}/{total_size_mb:.1f} MB)",
         end="\r",
