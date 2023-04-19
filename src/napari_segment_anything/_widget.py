@@ -24,8 +24,12 @@ class SAMWidget(Container):
     def __init__(self, viewer: napari.Viewer, model_type: str = "default"):
         super().__init__()
         self._viewer = viewer
-
-        self._device = "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            self._device = "cuda"
+        elif torch.backends.mps.is_available():
+            self._device = "mps"
+        else:
+            self._device = "cpu"
 
         self._model_type_widget = ComboBox(
             value=model_type,
