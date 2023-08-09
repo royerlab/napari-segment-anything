@@ -31,6 +31,11 @@ conda activate labeling
 pip install -r requirements.txt
 ```
 
+Install the plugin itself
+```
+pip install -e .
+```
+
 Now, you can run `napari`.
 
 
