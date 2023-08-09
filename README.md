@@ -28,7 +28,7 @@ Setup dev environment:
 conda env create -f environment.yml
 conda activate labeling
 
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 Now, you can run `napari`.
