@@ -1,0 +1,12 @@
+numpy
+magicgui
+qtpy
+napari
+vispy
+tqdm
+napari-nifti
+superqt
+git+https://github.com/facebookresearch/segment-anything.git@main
+torch
+torchvision
+napari[all]

@@ -1,5 +1,6 @@
 from typing import Any, Generator, Optional
-
+import cv2
+import imageio
 import napari
 import numpy as np
 import torch
@@ -59,6 +60,11 @@ class SAMWidget(Container):
         self._cancel_annot_btn.changed.connect(self._cancel_annot)
         self.append(self._cancel_annot_btn)
 
+        # segment precipitates
+        self._segment_prec_btn = PushButton(text="Segment Precipitates")
+        self._segment_prec_btn.changed.connect(self._on_segment_prec)
+        self.append(self._segment_prec_btn)
+        
         self._auto_segm_btn = PushButton(text="Auto. Segm.")
         self._auto_segm_btn.changed.connect(self._on_auto_run)
         self.append(self._auto_segm_btn)
@@ -185,6 +191,18 @@ class SAMWidget(Container):
         # on mouse release
         self._on_interactive_run()
 
+    def _on_segment_prec(self) -> None:
+        # todo Call actual model with the input image
+        mask = imageio.imread('/home/jry/source/PetrKursky/NapariProject/mask.png')
+        # todo separate to other
+        bin_masks = self._binary_mask_to_many_masks(mask)
+         
+        labels = self._labels_layer.data
+        for i, mask in enumerate(bin_masks):
+            labels[mask] = i + 1
+
+        self._labels_layer.data = labels
+
     def _on_auto_run(self) -> None:
         if self._image is None:
             return
@@ -216,3 +234,8 @@ class SAMWidget(Container):
 
         self._confirm_mask_btn.enabled = False
         self._cancel_annot_btn.enabled = False
+ 
+    def _binary_mask_to_many_masks(self, mask):
+        binary = np.uint8(mask)
+        n_labels, labels = cv2.connectedComponents(binary) 
+        return [ labels==l_id for l_id in range(1,n_labels)]
