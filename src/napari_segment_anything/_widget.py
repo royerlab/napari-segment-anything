@@ -93,8 +93,8 @@ class SAMWidget(Container):
         self._logits: Optional[torch.TensorType] = None
 
         self._model_type_widget.changed.emit(model_type)
-        self._viewer.bind_key("C", self._on_confirm_mask)
-        self._viewer.bind_key("X", self._cancel_annot)
+        self._viewer.bind_key("C", self._on_confirm_mask, overwrite=True)
+        self._viewer.bind_key("X", self._cancel_annot, overwrite=True)
 
     def _load_model(self, model_type: str) -> None:
         self._sam = sam_model_registry[model_type](
