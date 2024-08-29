@@ -71,7 +71,7 @@ class SAMWidget(Container):
         self._mask_layer = self._viewer.add_labels(
             data=np.zeros((256, 256), dtype=int),
             name="SAM mask",
-            color={1: "cyan"},
+            colormap={1: "cyan", None: "transparent"},
         )
         self._mask_layer.contour = 2
 
