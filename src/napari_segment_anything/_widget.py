@@ -6,6 +6,7 @@ import torch
 from magicgui.widgets import ComboBox, Container, PushButton, create_widget
 from napari.layers import Image, Points, Shapes
 from napari.layers.shapes._shapes_constants import Mode
+from napari.utils import DirectLabelColormap
 from qtpy.QtCore import Qt
 from segment_anything import SamPredictor, sam_model_registry
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
@@ -67,12 +68,16 @@ class SAMWidget(Container):
             data=np.zeros((256, 256), dtype=int),
             name="SAM labels",
         )
-
+        # mok begin
+        mask_colormap = DirectLabelColormap()
+        mask_colormap.color_dict = {1: "cyan"}
         self._mask_layer = self._viewer.add_labels(
             data=np.zeros((256, 256), dtype=int),
             name="SAM mask",
-            color={1: "cyan"},
+            colormap=mask_colormap,
         )
+        # mok end
+        self._mask_layer.colormap = mask_colormap
         self._mask_layer.contour = 2
 
         self._pts_layer = self._viewer.add_points(name="SAM points")

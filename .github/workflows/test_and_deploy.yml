@@ -23,12 +23,12 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.10', '3.11', '3.12']
         include:
           - platform: windows-latest
-            python-version: '3.10'
-          - platform: macos-latest
-            python-version: '3.10'
+            python-version: '3.12'
+          - platform: macos-13
+            python-version: '3.12'
 
     steps:
       - uses: actions/checkout@v3
